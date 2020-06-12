@@ -158,6 +158,19 @@ describe Puppet::Type.type(:zpool).provider(:zpool) do
     end
   end
 
+  describe 'when calling the getters and setters for configurable options' do
+    [:ashift,:autoexpand,:failmode].each do |field|
+      it "should get the #{field} value from the pool" do
+        allow(provider).to receive(:zpool).with(:get,'-H', '-o', 'value', field, name).and_return('value')
+        expect(provider.send(field)).to eq('value')
+      end
+      it "should set #{field}=value" do
+        expect(provider).to receive(:zpool).with(:set, "#{field}=value", name)
+        provider.send("#{field}=", 'value')
+      end
+    end
+  end
+
   describe 'when calling the getters and setters' do
     [:disk, :mirror, :raidz, :log, :spare].each do |field|
       describe "when calling #{field}" do
