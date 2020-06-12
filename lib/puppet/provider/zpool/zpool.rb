@@ -114,10 +114,10 @@ Puppet::Type.type(:zpool).provide(:zpool) do
       handle_multi_arrays(raidzarity, raidz)
     end
   end
+
   def add_pool_properties
     properties = []
-    Puppet::Type.type(:zpool).validproperties.each do |property|
-      next if property == :ensure
+    [:ashift, :autoexpand, :failmode].each do | property |
       if (value = @resource[property]) && value != ''
           properties << '-o' << "#{property}=#{value}"
       end
