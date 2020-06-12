@@ -90,6 +90,22 @@ module Puppet
       desc 'Log disks for this pool. This type does not currently support mirroring of log disks.'
     end
 
+    newproperty(:ashift) do
+      desc 'The Alignment Shift for the vdevs in the given pool.'
+
+      validate do |_value|
+        raise Puppet::Error _('This property is only supported on Linux') unless Facter.value(:kernel) == 'Linux'
+      end
+    end
+
+    newproperty(:autoexpand) do
+      desc 'The autoexpand setting for the given pool. Valid values are `on` or `off`'
+    end
+
+    newproperty(:failmode) do
+      desc 'The failmode setting for the given pool. Valid values are `wait`, `continue` or `panic`'
+    end
+
     newparam(:pool) do
       desc 'The name for this pool.'
       isnamevar

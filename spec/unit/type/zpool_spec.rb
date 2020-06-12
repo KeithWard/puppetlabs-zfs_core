@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe 'zpool' do
   describe Puppet::Type.type(:zpool) do
-    properties = [:ensure, :disk, :mirror, :raidz, :spare, :log]
+    properties = [:ensure, :disk, :mirror, :raidz, :spare, :log, :autoexpand, :failmode, :ashift]
     properties.each do |property|
       it "should have a #{property} property" do
         expect(described_class.attrclass(property).ancestors).to be_include(Puppet::Property)

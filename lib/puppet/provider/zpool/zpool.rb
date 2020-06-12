@@ -114,9 +114,19 @@ Puppet::Type.type(:zpool).provide(:zpool) do
       handle_multi_arrays(raidzarity, raidz)
     end
   end
+  def add_pool_properties
+    properties = []
+    Puppet::Type.type(:zpool).validproperties.each do |property|
+      next if property == :ensure
+      if (value = @resource[property]) && value != ''
+          properties << '-o' << "#{property}=#{value}"
+      end
+    end
+    properties
+  end
 
   def create
-    zpool(*([:create, @resource[:pool]] + build_vdevs + build_named('spare') + build_named('log')))
+    zpool(*([:create, @resource[:pool]] + add_pool_properties + build_vdevs + build_named('spare') + build_named('log')))
   end
 
   def destroy
@@ -141,4 +151,25 @@ Puppet::Type.type(:zpool).provide(:zpool) do
       fail "zpool #{field} can't be changed. should be #{should}, currently is #{current_pool[field]}"
     end
   end
+
+  [:autoexpand, :failmode].each do |field|
+    define_method(field) do
+      zpool(:get, "-H", "-o", "value", field, @resource[:name]).strip
+    end
+
+    define_method(field.to_s + "=") do |should|
+      zpool(:set, "#{field}=#{should}", @resource[:name])
+    end
+  end
+
+  if Facter.value(:kernel) == 'Linux'
+    define_method(:ashift) do
+      zpool(:get, '-H', '-o', 'value', :ashift, @resource[:name]).strip
+    end
+
+    define_method('ashift=') do |should|
+      zpool(:set, "ashift=#{should}", @resource[:name])
+    end
+  end
+
 end
