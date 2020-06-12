@@ -247,6 +247,19 @@ describe Puppet::Type.type(:zpool).provider(:zpool) do
         provider.create
       end
     end
+
+    describe 'when creating a zpool with options' do
+      before(:each) do
+        resource[:disk] = 'disk1'
+      end
+      [:ashift, :autoexpand, :failmode].each do | field |
+        it "should include field #{field}" do
+        resource[field] = field
+        expect(provider).to receive(:zpool).with(:create, '-o', "#{field}=#{field}", name, 'disk1')
+        provider.create
+      end
+      end
+    end
   end
 
   context '#delete' do
