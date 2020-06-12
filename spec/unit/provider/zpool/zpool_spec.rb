@@ -159,7 +159,7 @@ describe Puppet::Type.type(:zpool).provider(:zpool) do
   end
 
   describe 'when calling the getters and setters for configurable options' do
-    [:ashift,:autoexpand,:failmode].each do |field|
+    [:autoexpand,:failmode].each do |field|
       it "should get the #{field} value from the pool" do
         allow(provider).to receive(:zpool).with(:get,'-H', '-o', 'value', field, name).and_return('value')
         expect(provider.send(field)).to eq('value')
@@ -169,6 +169,30 @@ describe Puppet::Type.type(:zpool).provider(:zpool) do
         provider.send("#{field}=", 'value')
       end
     end
+  end
+  describe 'when calling the getters and setters for ashift' do
+    context 'when available' do
+      it "gets 'ashift' property" do
+        expect(provider).to receive(:zpool).with(:get, '-H', '-o', 'value', :ashift, name).and_return("value")
+        expect(provider.send('ashift')).to eq('value')
+      end
+      it 'sets acltype=value' do
+        expect(provider).to receive(:zpool).with(:set, 'ashift=value', name)
+        provider.send('ashift=', 'value')
+      end
+    end
+
+    context 'when not available' do
+      it "gets '-' for the ashift property" do
+        expect(provider).to receive(:zpool).with(:get, '-H', '-o', 'value', :ashift, name).and_raise(RuntimeError, 'not valid')
+        expect(provider.send('ashift')).to eq('-')
+      end
+      it 'does not error out when trying to set ashift' do
+        expect(provider).to receive(:zpool).with(:set, 'ashift=value', name).and_raise(RuntimeError, 'not valid')
+        expect { provider.send('ashift=', 'value') }.not_to raise_error
+      end
+    end
+
   end
 
   describe 'when calling the getters and setters' do

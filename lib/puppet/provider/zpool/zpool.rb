@@ -119,7 +119,7 @@ Puppet::Type.type(:zpool).provide(:zpool) do
     properties = []
     [:ashift, :autoexpand, :failmode].each do | property |
       if (value = @resource[property]) && value != ''
-          properties << '-o' << "#{property}=#{value}"
+        properties << '-o' << "#{property}=#{value}"
       end
     end
     properties
@@ -162,14 +162,27 @@ Puppet::Type.type(:zpool).provide(:zpool) do
     end
   end
 
-  if Facter.value(:kernel) == 'Linux'
-    define_method(:ashift) do
-      zpool(:get, '-H', '-o', 'value', :ashift, @resource[:name]).strip
-    end
+  # Borrow the code from the ZFS provider here so that we catch and return '-'
+  # as ashift is linux only.
+  # see lib/puppet/provider/zfs/zfs.rb
 
-    define_method('ashift=') do |should|
-      zpool(:set, "ashift=#{should}", @resource[:name])
+  PARAMETER_UNSET_OR_NOT_AVAILABLE = '-'.freeze
+
+  define_method(:ashift) do
+    begin
+      zpool(:get, '-H', '-o', 'value', :ashift, @resource[:name]).strip
+    rescue
+      PARAMETER_UNSET_OR_NOT_AVAILABLE
     end
   end
+
+  define_method('ashift=') do |should|
+    begin
+      zpool(:set, "ashift=#{should}", @resource[:name])
+    rescue
+      PARAMETER_UNSET_OR_NOT_AVAILABLE
+    end
+  end
+
 
 end
